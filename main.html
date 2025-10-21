@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Scheduler Battle Arena</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        input, select {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1em;
+            color: #333;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .process-list {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .process-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .arena {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .scheduler-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            color: #333;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .scheduler-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .scheduler-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .gantt-chart {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .gantt-bar {
+            display: inline-block;
+            padding: 15px 10px;
+            margin: 2px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            min-width: 40px;
+            animation: growBar 0.5s ease;
+            position: relative;
+        }
+
+        @keyframes growBar {
+            from {
+                transform: scaleX(0);
+                opacity: 0;
+            }
+            to {
+                transform: scaleX(1);
+                opacity: 1;
+            }
+        }
+
+        .time-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .results-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .results-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .winner {
+            border: 3px solid gold;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .winner-badge {
+            background: gold;
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔ CPU Scheduler Battle Arena ⚔</h1>
+        <p class="subtitle">Compare scheduling algorithms in real-time!</p>
+
+        <div class="controls">
+            <div class="input-section">
+                <div class="input-group">
+                    <label>Process ID</label>
+                    <input type="text" id="pid" placeholder="P1" value="P1">
+                </div>
+                <div class="input-group">
+                    <label>Arrival Time</label>
+                    <input type="number" id="at" placeholder="0" value="0" min="0">
+                </div>
+                <div class="input-group">
+                    <label>Burst Time</label>
+                    <input type="number" id="bt" placeholder="5" value="5" min="1">
+                </div>
+                <div class="input-group">
+                    <label>Priority (for Priority Scheduling)</label>
+                    <input type="number" id="priority" placeholder="1" value="1" min="1">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="addProcess()">➕ Add Process</button>
+                <button class="btn-secondary" onclick="generateRandom()">🎲 Random Processes</button>
+                <button class="btn-primary" onclick="startBattle()">⚔ Start Battle</button>
+                <button class="btn-danger" onclick="clearAll()">🗑 Clear All</button>
+            </div>
+
+            <div class="process-list" id="processList"></div>
+        </div>
+
+        <div class="arena" id="arena"></div>
+    </div>
+
+    <script>
+        let processes = [];
+        let nextId = 1;
+
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+
+        function addProcess() {
+            const pidInput = document.getElementById('pid').value.trim();
+            const pid = pidInput || `P${nextId}`;
+            const atVal = parseInt(document.getElementById('at').value);
+            const btVal = parseInt(document.getElementById('bt').value);
+            const priorityVal = parseInt(document.getElementById('priority').value);
+
+            const at = isNaN(atVal) ? 0 : atVal;
+            const bt = isNaN(btVal) ? 1 : btVal;
+            const priority = isNaN(priorityVal) ? 1 : priorityVal;
+
+            processes.push({ pid, at, bt, priority, color: colors[processes.length % colors.length] });
+            nextId++;
+
+            document.getElementById('pid').value = `P${nextId}`;
+            document.getElementById('at').value = '';
+            document.getElementById('bt').value = '';
+            document.getElementById('priority').value = '';
+
+            updateProcessList();
+        }
+
+        function updateProcessList() {
+            const list = document.getElementById('processList');
+            if (processes.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999;">No processes added yet. Add some to start the battle!</p>';
+                return;
+            }
+
+            list.innerHTML = '<h3 style="margin-bottom: 10px;">Process Queue:</h3>' +
+                processes.map((p, i) => `
+                    <div class="process-item">
+                        <span><strong>${p.pid}</strong> - AT: ${p.at}, BT: ${p.bt}, Priority: ${p.priority}</span>
+                        <button onclick="removeProcess(${i})" style="background: rgba(255,255,255,0.3); border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">❌</button>
+                    </div>
+                `).join('');
+        }
+
+        function removeProcess(index) {
+            processes.splice(index, 1);
+            updateProcessList();
+        }
+
+        function generateRandom() {
+            processes = [];
+            const count = 5 + Math.floor(Math.random() * 3);
+            for (let i = 0; i < count; i++) {
+                processes.push({
+                    pid: `P${i + 1}`,
+                    at: Math.floor(Math.random() * 10),
+                    bt: 1 + Math.floor(Math.random() * 10),
+                    priority: 1 + Math.floor(Math.random() * 5),
+                    color: colors[i % colors.length]
+                });
+            }
+            nextId = count + 1;
+            document.getElementById('pid').value = `P${nextId}`;
+            document.getElementById('at').value = '';
+            document.getElementById('bt').value = '';
+            document.getElementById('priority').value = '';
+            updateProcessList();
+        }
+
+        function clearAll() {
+            processes = [];
+            nextId = 1;
+            document.getElementById('pid').value = `P${nextId}`;
+            document.getElementById('at').value = '';
+            document.getElementById('bt').value = '';
+            document.getElementById('priority').value = '';
+            updateProcessList();
+            document.getElementById('arena').innerHTML = '';
+        }
+
+        function simulateFCFS(procs) {
+            const sorted = [...procs].sort((a, b) => a.at - b.at);
+            let time = 0;
+            const results = {};
+            const gantt = [];
+
+            sorted.forEach(p => {
+                if (time < p.at) time = p.at;
+                const start = time;
+                const finish = start + p.bt;
+                const waiting = start - p.at;
+                const turnaround = finish - p.at;
+                const response = waiting;
+
+                results[p.pid] = { waiting, turnaround, response };
+                gantt.push({ pid: p.pid, start, finish, color: p.color });
+                time = finish;
+            });
+
+            return { results, gantt };
+        }
+
+        function simulateSJF(procs) {
+            let time = 0;
+            const results = {};
+            const gantt = [];
+            const remaining = [...procs];
+
+            while (remaining.length > 0) {
+                const available = remaining.filter(p => p.at <= time && p.bt > 0);
+
+                if (available.length === 0) {
+                    time = Math.min(...remaining.map(p => p.at));
+                    continue;
+                }
+
+                available.sort((a, b) => a.bt - b.bt || a.at - b.at);
+                const p = available[0];
+                const start = time;
+                const finish = start + p.bt;
+                const waiting = start - p.at;
+                const turnaround = finish - p.at;
+                const response = waiting;
+
+                results[p.pid] = { waiting, turnaround, response };
+                gantt.push({ pid: p.pid, start, finish, color: p.color });
+                time = finish;
+
+                remaining.splice(remaining.indexOf(p), 1);
+            }
+
+            return { results, gantt };
+        }
+
+        function simulatePriority(procs) {
+            let time = 0;
+            const results = {};
+            const gantt = [];
+            const remaining = [...procs];
+
+            while (remaining.length > 0) {
+                const available = remaining.filter(p => p.at <= time && p.bt > 0);
+
+                if (available.length === 0) {
+                    time = Math.min(...remaining.map(p => p.at));
+                    continue;
+                }
+
+                available.sort((a, b) => a.priority - b.priority || a.at - b.at);
+                const p = available[0];
+                const start = time;
+                const finish = start + p.bt;
+                const waiting = start - p.at;
+                const turnaround = finish - p.at;
+                const response = waiting;
+
+                results[p.pid] = { waiting, turnaround, response };
+                gantt.push({ pid: p.pid, start, finish, color: p.color });
+                time = finish;
+
+                remaining.splice(remaining.indexOf(p), 1);
+            }
+
+            return { results, gantt };
+        }
+
+        function simulateRoundRobin(procs, quantum = 2) {
+            let time = 0;
+            const results = {};
+            const gantt = [];
+            const queue = [];
+            const remaining = procs.map(p => ({ ...p, remainingBt: p.bt, firstRun: true }));
+            const responseTime = {};
+
+            while (remaining.some(p => p.remainingBt > 0)) {
+                // enqueue newly arrived
+                remaining.filter(p => p.at <= time && p.remainingBt > 0 && !queue.includes(p))
+                    .forEach(p => queue.push(p));
+
+                if (queue.length === 0) {
+                    time++;
+                    continue;
+                }
+
+                const p = queue.shift();
+
+                if (p.firstRun) {
+                    responseTime[p.pid] = time - p.at;
+                    p.firstRun = false;
+                }
+
+                const execTime = Math.min(quantum, p.remainingBt);
+                gantt.push({ pid: p.pid, start: time, finish: time + execTime, color: p.color });
+                time += execTime;
+                p.remainingBt -= execTime;
+
+                // enqueue arrivals during execution
+                remaining.filter(pr => pr.at <= time && pr.remainingBt > 0 && pr !== p && !queue.includes(pr))
+                    .forEach(pr => queue.push(pr));
+
+                if (p.remainingBt > 0) {
+                    queue.push(p);
+                } else {
+                    const turnaround = time - p.at;
+                    const waiting = turnaround - p.bt;
+                    results[p.pid] = {
+                        waiting,
+                        turnaround,
+                        response: responseTime[p.pid]
+                    };
+                }
+            }
+
+            return { results, gantt };
+        }
+
+        function calculateAverages(results) {
+            const values = Object.values(results);
+            if (values.length === 0) return { avgWaiting: 0, avgTurnaround: 0, avgResponse: 0 };
+            const avgWaiting = values.reduce((sum, r) => sum + r.waiting, 0) / values.length;
+            const avgTurnaround = values.reduce((sum, r) => sum + r.turnaround, 0) / values.length;
+            const avgResponse = values.reduce((sum, r) => sum + r.response, 0) / values.length;
+            return { avgWaiting, avgTurnaround, avgResponse };
+        }
+
+        function createGanttChart(gantt) {
+            // scale (px per time unit)
+            const scale = 40;
+            if (gantt.length === 0) return '<div style="color:#666">No timeline</div>';
+            return gantt.map(g => {
+                const width = Math.max((g.finish - g.start) * scale, 40);
+                return `
+                    <div class="gantt-bar" style="background: ${g.color}; width: ${width}px;">
+                        ${g.pid}
+                        <span class="time-label">${g.start} - ${g.finish}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createResultsTable(results) {
+            return `
+                <table class="results-table">
+                    <tr>
+                        <th>Process</th>
+                        <th>Waiting</th>
+                        <th>Turnaround</th>
+                        <th>Response</th>
+                    </tr>
+                    ${Object.entries(results).map(([pid, r]) => `
+                        <tr>
+                            <td><strong>${pid}</strong></td>
+                            <td>${r.waiting.toFixed(1)}</td>
+                            <td>${r.turnaround.toFixed(1)}</td>
+                            <td>${r.response.toFixed(1)}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            `;
+        }
+
+        function startBattle() {
+            if (processes.length === 0) {
+                alert('Please add some processes first!');
+                return;
+            }
+
+            const schedulers = [
+                { name: 'FCFS', func: simulateFCFS },
+                { name: 'SJF', func: simulateSJF },
+                { name: 'Priority', func: simulatePriority },
+                { name: 'Round Robin', func: (p) => simulateRoundRobin(p, 2) }
+            ];
+
+            const arena = document.getElementById('arena');
+            arena.innerHTML = '';
+
+            const scores = schedulers.map(sched => {
+                const { results, gantt } = sched.func(processes);
+                const avg = calculateAverages(results);
+                return { name: sched.name, results, gantt, avg, score: avg.avgTurnaround };
+            });
+
+            const winner = scores.reduce((min, s) => s.score < min.score ? s : min, scores[0]);
+
+            scores.forEach(s => {
+                const isWinner = s.name === winner.name;
+                const card = document.createElement('div');
+                card.className = `scheduler-card ${isWinner ? 'winner' : ''}`;
+                card.innerHTML = `
+                    <div class="scheduler-header">
+                        <div class="scheduler-title">${s.name}</div>
+                        ${isWinner ? '<div class="winner-badge">🏆 WINNER!</div>' : ''}
+                    </div>
+                    <div class="gantt-chart">
+                        <strong>Gantt Chart:</strong><br><br>
+                        ${createGanttChart(s.gantt)}
+                    </div>
+                    <div class="metrics">
+                        <div class="metric-card">
+                            <div class="metric-label">Avg Waiting</div>
+                            <div class="metric-value">${s.avg.avgWaiting.toFixed(2)}</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Avg Turnaround</div>
+                            <div class="metric-value">${s.avg.avgTurnaround.toFixed(2)}</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Avg Response</div>
+                            <div class="metric-value">${s.avg.avgResponse.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    ${createResultsTable(s.results)}
+                `;
+                arena.appendChild(card);
+            });
+        }
+
+        // Initialize with some default processes
+        generateRandom();
+    </script>
+</body>
+</html>
