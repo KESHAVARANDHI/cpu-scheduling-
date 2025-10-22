@@ -1,7 +1,6 @@
-What it is
+
 CPU scheduling is the mechanism by which an operating system decides which process or thread among many ready ones gets access to the CPU next, so that the CPU doesn’t sit idle while work could be done. 
 
-Why it matters
 Good scheduling helps maximize CPU utilization, increase throughput (processes completed per unit time), reduce waiting time and response time, and provide fairness among processes. 
 
 Key concepts
